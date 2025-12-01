@@ -1,0 +1,36 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# ----------------------------------------
+# 1. Load the dataset
+# ----------------------------------------
+df = pd.read_csv(r"/Users/srushtighogare/Downloads/Datasets/IRIS.csv")
+print("\n--- First 5 rows ---")
+print(df.head())
+
+# ----------------------------------------
+# 2. List features and their types
+# ----------------------------------------
+print("\n--- Feature Types ---")
+
+for col in df.columns:
+    if pd.api.types.is_numeric_dtype(df[col]):
+        print(f"{col} : Numeric")
+    else:
+        print(f"{col} : Categorical / Nominal")
+
+# ----------------------------------------
+# 3. Create histogram for each numeric feature (SEABORN)
+# ----------------------------------------
+numeric_cols = df.select_dtypes(include='number').columns
+print("\nNumeric Columns:", list(numeric_cols))
+
+for col in numeric_cols:
+    plt.figure(figsize=(6,4))
+    sns.histplot(data=df, x=col, kde=True, bins=20, color="skyblue")
+    plt.title(f"Histogram of {col}")
+    plt.xlabel(col)
+    plt.ylabel("Frequency")
+    plt.grid(False)
+    plt.show()
