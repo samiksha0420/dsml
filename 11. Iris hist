@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # ----------------------------------------
 # 1. Load the dataset
 # ----------------------------------------
-df = pd.read_csv(r"/Users/srushtighogare/Downloads/Datasets/IRIS.csv")
+df = pd.read_csv('path')
 print("\n--- First 5 rows ---")
 print(df.head())
 
