@@ -1,0 +1,172 @@
+# id3_lipstick.py
+import math
+from collections import Counter, defaultdict
+from pprint import pprint
+
+# ---------------------------
+# Small lipstick dataset (toy example)
+# Each row is a dict of attributes + target 'Buys'
+# Attributes: Age, Income, Gender, MaritalStatus
+# Values chosen to be simple categorical strings.
+# ---------------------------
+data = [
+    {'Age':'<21',  'Income':'Low',    'Gender':'Female','MaritalStatus':'Single', 'Buys':'No'},
+    {'Age':'<21',  'Income':'Low',    'Gender':'Female','MaritalStatus':'Married','Buys':'No'},
+    {'Age':'21-35','Income':'Low',    'Gender':'Female','MaritalStatus':'Single', 'Buys':'Yes'},
+    {'Age':'>35',  'Income':'Medium', 'Gender':'Female','MaritalStatus':'Married','Buys':'Yes'},
+    {'Age':'>35',  'Income':'High',   'Gender':'Female','MaritalStatus':'Married','Buys':'No'},
+    {'Age':'>35',  'Income':'High',   'Gender':'Male',  'MaritalStatus':'Single', 'Buys':'No'},
+    {'Age':'21-35','Income':'High',   'Gender':'Male',  'MaritalStatus':'Single', 'Buys':'Yes'},
+    {'Age':'<21',  'Income':'Medium', 'Gender':'Male',  'MaritalStatus':'Single', 'Buys':'No'},
+    {'Age':'<21',  'Income':'High',   'Gender':'Male',  'MaritalStatus':'Married','Buys':'Yes'},
+    {'Age':'>35',  'Income':'Medium', 'Gender':'Male',  'MaritalStatus':'Married','Buys':'Yes'},
+    {'Age':'21-35','Income':'Medium', 'Gender':'Female','MaritalStatus':'Married','Buys':'Yes'},
+    {'Age':'21-35','Income':'Low',    'Gender':'Male',  'MaritalStatus':'Married','Buys':'No'},
+    {'Age':'21-35','Income':'Medium', 'Gender':'Male',  'MaritalStatus':'Single', 'Buys':'Yes'},
+    {'Age':'<21',  'Income':'Medium', 'Gender':'Female','MaritalStatus':'Married','Buys':'No'},
+]
+
+# ---------------------------
+# Helper functions: entropy, information gain
+# ---------------------------
+def entropy(rows, target_attr='Buys'):
+    """Compute entropy of the target attribute in given rows."""
+    counts = Counter(row[target_attr] for row in rows)
+    total = len(rows)
+    ent = 0.0
+    for cnt in counts.values():
+        p = cnt / total
+        if p > 0:
+            ent -= p * math.log2(p)
+    return ent
+
+def partition_rows(rows, attr):
+    """Partition rows by each value of attribute attr.
+       Returns dict: value -> list of rows that have that value."""
+    partitions = defaultdict(list)
+    for r in rows:
+        partitions[r[attr]].append(r)
+    return partitions
+
+def info_gain(rows, attr, target_attr='Buys'):
+    """Compute information gain of splitting rows on attribute attr."""
+    parent_entropy = entropy(rows, target_attr)
+    partitions = partition_rows(rows, attr)
+    total = len(rows)
+    # weighted entropy after the split
+    weighted_ent = 0.0
+    for subset in partitions.values():
+        weight = len(subset) / total
+        weighted_ent += weight * entropy(subset, target_attr)
+    gain = parent_entropy - weighted_ent
+    return gain
+
+# ---------------------------
+# ID3 algorithm (recursive)
+# ---------------------------
+def majority_class(rows, target_attr='Buys'):
+    counts = Counter(row[target_attr] for row in rows)
+    return counts.most_common(1)[0][0]
+
+def id3(rows, attributes, target_attr='Buys', depth=0, max_depth=None):
+    """
+    Build decision tree using ID3.
+    Returns a tree represented as nested dicts:
+      - If node is leaf: return ('Leaf', class_label)
+      - If node is decision: return ('Node', attribute, {value: subtree, ...})
+    """
+    # If all rows have same target -> leaf
+    target_values = [r[target_attr] for r in rows]
+    if len(set(target_values)) == 1:
+        return ('Leaf', target_values[0])
+
+    # If no attributes left or max depth reached -> majority class leaf
+    if not attributes or (max_depth is not None and depth >= max_depth):
+        return ('Leaf', majority_class(rows, target_attr))
+
+    # Choose best attribute by information gain
+    gains = [(attr, info_gain(rows, attr, target_attr)) for attr in attributes]
+    best_attr, best_gain = max(gains, key=lambda x: x[1])
+    # If gain is 0 -> cannot improve -> majority leaf
+    if best_gain <= 0:
+        return ('Leaf', majority_class(rows, target_attr))
+
+    # Build subtree for each value of best_attr
+    tree = {}
+    partitions = partition_rows(rows, best_attr)
+    remaining_attrs = [a for a in attributes if a != best_attr]
+
+    for attr_val, subset in partitions.items():
+        subtree = id3(subset, remaining_attrs, target_attr, depth+1, max_depth)
+        tree[attr_val] = subtree
+
+    return ('Node', best_attr, tree)
+
+# ---------------------------
+# Utility: pretty print tree
+# ---------------------------
+def print_tree(node, indent=''):
+    if node[0] == 'Leaf':
+        print(indent + "Leaf:", node[1])
+    else:
+        _, attr, branches = node
+        print(indent + f"Node: split on [{attr}]")
+        for val, subtree in branches.items():
+            print(indent + f"  If {attr} == {val}:")
+            print_tree(subtree, indent + '    ')
+
+# ---------------------------
+# Prediction with tree
+# ---------------------------
+def predict(tree, sample):
+    if tree[0] == 'Leaf':
+        return tree[1]
+    _, attr, branches = tree
+    val = sample.get(attr)
+    # if value not seen in training, return majority of available branches (fallback)
+    if val not in branches:
+        # fallback: choose the first branch's result or majority among leaves
+        # simple fallback: majority among branch leaves
+        leaf_counts = Counter()
+        for sub in branches.values():
+            # collect leaf label if subtree is a leaf; else traverse one level down
+            if sub[0] == 'Leaf':
+                leaf_counts[sub[1]] += 1
+            else:
+                # try to extract majority label by diving into subtree until leaf
+                def get_leaf_label(n):
+                    if n[0] == 'Leaf':
+                        return n[1]
+                    # pick first branch
+                    first = next(iter(n[2].values()))
+                    return get_leaf_label(first)
+                leaf_counts[get_leaf_label(sub)] += 1
+        return leaf_counts.most_common(1)[0][0]
+    return predict(branches[val], sample)
+
+# ---------------------------
+# Run ID3 on our dataset
+# ---------------------------
+attributes = ['Age', 'Income', 'Gender', 'MaritalStatus']
+tree = id3(data, attributes)
+print("\n--- Learned Decision Tree ---")
+print_tree(tree)
+
+# Print root node name
+if tree[0] == 'Node':
+    print("\nRoot attribute chosen:", tree[1])
+else:
+    print("\nRoot is a leaf with class:", tree[1])
+
+# Example test cases (from your assignment hints)
+tests = [
+    {'Age':'<21','Income':'Low','Gender':'Female','MaritalStatus':'Married'},
+    {'Age':'>35','Income':'Medium','Gender':'Female','MaritalStatus':'Married'},
+    {'Age':'21-35','Income':'Low','Gender':'Male','MaritalStatus':'Married'}
+]
+
+print("\n--- Predictions on sample tests ---")
+for t in tests:
+    print(t, "=> Predicted Buys:", predict(tree, t))
+
+# End of file
