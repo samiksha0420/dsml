@@ -5,7 +5,7 @@ import seaborn as sns
 # ----------------------------------------
 # 1. Load the dataset
 # ----------------------------------------
-df = pd.read_csv(r"/Users/srushtighogare/Downloads/Datasets/IRIS.csv")  # your dataset path
+df = pd.read_csv('path')  # your dataset path
 
 print("\n--- First 5 rows of the dataset ---")
 print(df.head())
