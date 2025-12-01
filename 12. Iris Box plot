@@ -1,0 +1,47 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# ----------------------------------------
+# 1. Load the dataset
+# ----------------------------------------
+df = pd.read_csv(r"/Users/srushtighogare/Downloads/Datasets/IRIS.csv")  # your dataset path
+
+print("\n--- First 5 rows of the dataset ---")
+print(df.head())
+
+# ----------------------------------------
+# 2. Identify numeric columns for boxplots
+# ----------------------------------------
+numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns
+print("\nNumeric Features:", list(numeric_cols))
+
+# ----------------------------------------
+# 3. Plot boxplot for each numeric feature
+# ----------------------------------------
+for col in numeric_cols:
+    plt.figure(figsize=(6,4))
+    sns.boxplot(x=df[col])        # seaborn boxplot
+    plt.title(f"Boxplot of {col}")
+    plt.xlabel(col)
+    plt.grid(False)
+    plt.show()
+
+# ----------------------------------------
+# 4. Identify outliers based on IQR (MATHEMATICAL METHOD)
+# ----------------------------------------
+print("\n--- Outlier Detection (IQR Method) ---")
+for col in numeric_cols:
+    Q1 = df[col].quantile(0.25)
+    Q3 = df[col].quantile(0.75)
+    IQR = Q3 - Q1
+    lower = Q1 - 1.5 * IQR
+    upper = Q3 + 1.5 * IQR
+
+    outliers = df[(df[col] < lower) | (df[col] > upper)][col]
+
+    print(f"\n{col}:")
+    if len(outliers) == 0:
+        print("No outliers detected.")
+    else:
+        print(f"Outliers found: {list(outliers.values)}")
