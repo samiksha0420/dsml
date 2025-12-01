@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # ----------------------------------------
 # 1. Load Titanic dataset
 # ----------------------------------------
-df = pd.read_csv(r"/Users/srushtighogare/Downloads/Datasets/titanic.csv")
+df = pd.read_csv('path')
 
 print("\n--- First 5 Rows ---")
 print(df.head())
