@@ -1,0 +1,57 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# ----------------------------------------
+# 1. Load Titanic dataset
+# ----------------------------------------
+df = pd.read_csv(r"/Users/srushtighogare/Downloads/Datasets/titanic.csv")
+
+print("\n--- First 5 Rows ---")
+print(df.head())
+
+# ----------------------------------------
+# 2. Basic Info
+# ----------------------------------------
+print("\n--- Dataset Info ---")
+print(df.info())
+
+# ----------------------------------------
+# 3. Pattern 1: Survival by Gender
+# ----------------------------------------
+plt.figure(figsize=(6,4))
+sns.countplot(data=df, x='Survived', hue='Sex')
+plt.title("Survival by Gender")
+plt.show()
+
+# ----------------------------------------
+# 4. Pattern 2: Survival by Passenger Class
+# ----------------------------------------
+plt.figure(figsize=(6,4))
+sns.countplot(data=df, x='Survived', hue='Pclass')
+plt.title("Survival by Passenger Class")
+plt.show()
+
+# ----------------------------------------
+# 5. Pattern 3: Age Distribution
+# ----------------------------------------
+plt.figure(figsize=(6,4))
+sns.histplot(data=df, x='Age', kde=True, color="orange")
+plt.title("Age Distribution of Passengers")
+plt.show()
+
+# ----------------------------------------
+# 6. Pattern 4: Fare Distribution
+# ----------------------------------------
+plt.figure(figsize=(6,4))
+sns.histplot(data=df, x='Fare', kde=True, color="green")
+plt.title("Fare Distribution")
+plt.show()
+
+# ----------------------------------------
+# 7. Pattern 5: Heatmap of Correlations
+# ----------------------------------------
+plt.figure(figsize=(10,6))
+sns.heatmap(df.corr(), annot=True, cmap="coolwarm")
+plt.title("Correlation Heatmap")
+plt.show()
