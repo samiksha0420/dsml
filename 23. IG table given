@@ -1,0 +1,68 @@
+# With reference to Table , obtain the Frequency table for the
+# attribute age. From the frequency table you have obtained, calculate the
+# information gain of the frequency table while splitting on Age. (Use step
+# by step Python/Pandas commands)
+
+import pandas as pd
+import math
+from collections import Counter
+
+# Recreate the dataset from the image (14 records)
+data = [
+    {"Age":"Young",  "Income":"High",   "Married":"No",  "Health":"Fair", "Class":"No"},
+    {"Age":"Young",  "Income":"High",   "Married":"No",  "Health":"Good", "Class":"No"},
+    {"Age":"Middle", "Income":"High",   "Married":"No",  "Health":"Fair", "Class":"Yes"},
+    {"Age":"Old",    "Income":"Medium", "Married":"No",  "Health":"Fair", "Class":"Yes"},
+    {"Age":"Old",    "Income":"Low",    "Married":"Yes", "Health":"Fair", "Class":"Yes"},
+    {"Age":"Old",    "Income":"Low",    "Married":"Yes", "Health":"Good", "Class":"No"},
+    {"Age":"Middle", "Income":"Low",    "Married":"Yes", "Health":"Good", "Class":"Yes"},
+    {"Age":"Young",  "Income":"Medium", "Married":"No",  "Health":"Fair", "Class":"No"},
+    {"Age":"Young",  "Income":"Low",    "Married":"Yes", "Health":"Fair", "Class":"Yes"},
+    {"Age":"Old",    "Income":"Medium", "Married":"Yes", "Health":"Fair", "Class":"Yes"},
+    {"Age":"Young",  "Income":"Medium", "Married":"Yes", "Health":"Good", "Class":"Yes"},
+    {"Age":"Middle", "Income":"Medium", "Married":"No",  "Health":"Good", "Class":"Yes"},
+    {"Age":"Middle", "Income":"High",   "Married":"Yes", "Health":"Fair", "Class":"Yes"},
+    {"Age":"Old",    "Income":"Medium", "Married":"No",  "Health":"Good", "Class":"No"}
+]
+
+df = pd.DataFrame(data)
+
+# Show dataset
+print("Dataframe (all rows):")
+print(df.to_string(index=False))
+
+# Frequency table for 'Age'
+freq_age = df['Age'].value_counts().rename_axis('Age').reset_index(name='Frequency')
+print("\nFrequency table for 'Age':")
+print(freq_age.to_string(index=False))
+
+# Entropy helper
+def entropy(labels):
+    total = len(labels)
+    counts = Counter(labels)
+    ent = 0.0
+    for cnt in counts.values():
+        p = cnt / total
+        if p > 0:
+            ent -= p * math.log2(p)
+    return ent
+
+# Base entropy (before split)
+base_labels = df['Class'].tolist()
+H_base = entropy(base_labels)
+print(f"\nBase entropy H(Class) = {H_base:.6f}  (class counts = {Counter(base_labels)})")
+
+# Per-group entropy and weighted entropy after splitting on Age
+groups = df.groupby('Age')
+weighted_entropy = 0.0
+print("\nEntropy per Age group:")
+for name, group in groups:
+    labels = group['Class'].tolist()
+    H_group = entropy(labels)
+    weight = len(group) / len(df)
+    weighted_entropy += weight * H_group
+    print(f" Age = {name:6s} | count = {len(group):2d} | entropy = {H_group:.6f} | weight = {weight:.4f} | weighted = {weight*H_group:.6f} | class counts = {Counter(labels)}")
+
+info_gain = H_base - weighted_entropy
+print(f"\nWeighted entropy after splitting on Age = {weighted_entropy:.6f}")
+print(f"Information Gain (Age) = H_base - weighted = {H_base:.6f} - {weighted_entropy:.6f} = {info_gain:.6f}")
