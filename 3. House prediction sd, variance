@@ -1,0 +1,58 @@
+# Perform the following operations using Python on the data set
+# House_Price Prediction dataset. Compute standard deviation, variance and
+# percentiles using separate commands, for each feature. Create a histogram
+# for each feature in the dataset to illustrate the feature distributions.
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# -----------------------------
+# 1. Load the Dataset
+# -----------------------------
+df = pd.read_csv("/Users/srushtighogare/Downloads/Datasets/House Data.csv")   # Change filename if needed
+
+print("\n--- First 5 Rows of Dataset ---")
+print(df.head())
+
+# Select only numeric features
+numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns
+
+print("\nNumeric Features:")
+print(list(numeric_cols))
+
+# -----------------------------
+# 2. Standard Deviation (Separate Command)
+# -----------------------------
+print("\n--- Standard Deviation for Each Numeric Feature ---")
+std_values = df[numeric_cols].std()
+print(std_values)
+
+# -----------------------------
+# 3. Variance (Separate Command)
+# -----------------------------
+print("\n--- Variance for Each Numeric Feature ---")
+var_values = df[numeric_cols].var()
+print(var_values)
+
+# -----------------------------
+# 4. Percentiles (Separate Command)
+# -----------------------------
+print("\n--- Percentiles (25%, 50%, 75%) for Each Numeric Feature ---")
+percentiles = df[numeric_cols].quantile([0.25, 0.50, 0.75])
+print(percentiles)
+
+# -----------------------------
+# 5. Histogram for EACH feature
+# -----------------------------
+print("\nCreating histograms for each numeric feature...")
+
+for col in numeric_cols:
+    plt.figure(figsize=(6,4))
+    plt.hist(df[col], bins=30, edgecolor='black')
+    plt.title(f"Histogram of {col}")
+    plt.xlabel(col)
+    plt.ylabel("Frequency")
+    plt.grid(False)
+    plt.show()
+
+print("\nAll histograms generated successfully!")
