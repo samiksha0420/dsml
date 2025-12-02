@@ -1,0 +1,70 @@
+# Write a program to do the following: You have given a collection of 8
+# points. P1=[2, 10] P2=[2, 5] P3=[8, 4] P4=[5, 8] P5=[7,5] P6=[6, 4] P7=[1, 2]
+# P8=[4, 9]. Perform the k-mean clustering with initial centroids as m1=P1
+# =Cluster#1=C1 and m2=P4=cluster#2=C2, m3=P7 =Cluster#3=C3. Answer
+# the following 1] Which cluster does P6 belong to? 2] What is the
+# population of a cluster around m3? 3] What is the updated value of m1,
+# m2, m3?
+
+# kmeans_single_iteration_3clusters.py
+# One assign+update step for K=3 on the given 8 points.
+
+points = {
+    "P1": (2, 10),
+    "P2": (2, 5),
+    "P3": (8, 4),
+    "P4": (5, 8),
+    "P5": (7, 5),
+    "P6": (6, 4),
+    "P7": (1, 2),
+    "P8": (4, 9)
+}
+
+# initial centroids
+m1 = points["P1"]  # Cluster C1
+m2 = points["P4"]  # Cluster C2
+m3 = points["P7"]  # Cluster C3
+
+def sq_dist(a, b):
+    return (a[0]-b[0])**2 + (a[1]-b[1])**2
+
+# assignment step
+clusters = {"C1": [], "C2": [], "C3": []}
+for name, pt in points.items():
+    d1 = sq_dist(pt, m1)
+    d2 = sq_dist(pt, m2)
+    d3 = sq_dist(pt, m3)
+    dmin = min(d1, d2, d3)
+    if dmin == d1:
+        clusters["C1"].append(name)
+    elif dmin == d2:
+        clusters["C2"].append(name)
+    else:
+        clusters["C3"].append(name)
+
+# update step: compute means
+def mean_point(names):
+    xs = [points[n][0] for n in names]
+    ys = [points[n][1] for n in names]
+    return (sum(xs)/len(xs), sum(ys)/len(ys)) if names else (None, None)
+
+m1_new = mean_point(clusters["C1"])
+m2_new = mean_point(clusters["C2"])
+m3_new = mean_point(clusters["C3"])
+
+# print results
+print("Cluster assignments (after first assignment step):")
+for c, members in clusters.items():
+    print(f" {c}: {members}  (population = {len(members)})")
+
+print("\n1) Which cluster does P6 belong to?")
+cluster_of_p6 = next((c for c, members in clusters.items() if "P6" in members), None)
+print(" P6 belongs to:", cluster_of_p6)
+
+print("\n2) Population of cluster around m3 (C3):", len(clusters["C3"]))
+print(" Members of C3:", clusters["C3"])
+
+print("\n3) Updated centroids after recomputing means:")
+print(" m1_new =", (round(m1_new[0], 6), round(m1_new[1], 6)))
+print(" m2_new =", (round(m2_new[0], 6), round(m2_new[1], 6)))
+print(" m3_new =", (round(m3_new[0], 6), round(m3_new[1], 6)))
