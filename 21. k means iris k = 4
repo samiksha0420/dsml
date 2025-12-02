@@ -1,0 +1,60 @@
+# Write a program to cluster a set of points using K-means for IRIS
+# dataset. Consider, K=4, clusters. Consider Euclidean distance as the
+# distance measure. Randomly initialize a cluster mean as one of the data
+# points. Iterate at least for 10 iterations. After iterations are over, print the
+# final cluster means for each of the clusters.
+
+import numpy as np
+from sklearn.datasets import load_iris
+
+# ----------------------------------------
+# 1. Load IRIS dataset (4 features)
+# ----------------------------------------
+iris = load_iris()
+X = iris.data   # shape = (150, 4)
+
+# ----------------------------------------
+# 2. Choose K=4 clusters and initialize means randomly from dataset
+# ----------------------------------------
+K = 4
+np.random.seed(42)   # for reproducibility
+
+initial_indices = np.random.choice(X.shape[0], K, replace=False)
+means = X[initial_indices]
+
+print("Initial cluster means:")
+print(means)
+
+# ----------------------------------------
+# 3. K-means Iterations (at least 10)
+# ----------------------------------------
+num_iterations = 10
+
+for it in range(num_iterations):
+    # Step 1: Assign points to nearest centroid
+    distances = np.linalg.norm(X[:, np.newaxis, :] - means[np.newaxis, :, :], axis=2)
+    labels = np.argmin(distances, axis=1)
+
+    # Step 2: Recalculate means
+    new_means = np.zeros_like(means)
+    for k in range(K):
+        cluster_points = X[labels == k]
+        if len(cluster_points) > 0:
+            new_means[k] = cluster_points.mean(axis=0)
+        else:
+            # Avoid empty cluster: reinitialize from random data point
+            new_means[k] = X[np.random.choice(X.shape[0])]
+
+    means = new_means
+
+    print(f"\nAfter iteration {it+1}, cluster means:")
+    print(means)
+
+# ----------------------------------------
+# 4. Final Output
+# ----------------------------------------
+print("\n==============================")
+print(" Final Cluster Means after 10 iterations")
+print("==============================")
+for k in range(K):
+    print(f"Cluster {k+1} Mean: {means[k]}")
