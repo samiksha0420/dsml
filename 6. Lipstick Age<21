@@ -1,0 +1,50 @@
+# Write a program to do: A dataset collected in a cosmetics shop showing
+# details of customers and whether or not they responded to a special offer
+# to buy a new lip-stick is shown in table below. (Use library commands)
+# According to the decision tree you have made from the previous training
+# data set, what is the decision for the test data: [Age < 21, Income = Low,
+# Gender = Female, Marital Status = Married]
+
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier, export_text
+from sklearn.preprocessing import LabelEncoder
+
+CSV_PATH = "/Users/srushtighogare/Downloads/Datasets/Lipstick.csv"   # adjust path if needed
+
+# Read and clean
+df = pd.read_csv(CSV_PATH)
+df.columns = [c.strip() for c in df.columns]
+# drop Id-like column if present
+for c in df.columns:
+    if c.lower().startswith("\ufeffid") or c.lower() == "id":
+        df = df.drop(columns=[c])
+        break
+
+target_col = "Buys" if "Buys" in df.columns else df.columns[-1]
+feature_cols = [c for c in df.columns if c != target_col]
+
+# Encode target
+le = LabelEncoder()
+y = le.fit_transform(df[target_col])
+
+# One-hot encode features
+X = pd.get_dummies(df[feature_cols], drop_first=False)
+
+# Train tree
+clf = DecisionTreeClassifier(random_state=42)
+clf.fit(X, y)
+
+# Optional: print textual tree
+print(export_text(clf, feature_names=list(X.columns)))
+
+# Prepare and encode test sample
+test_sample = {"Age": "<21", "Income": "Low", "Gender": "Female", "Ms": "Married"}
+test_df = pd.DataFrame([test_sample])
+test_X = pd.get_dummies(test_df).reindex(columns=X.columns, fill_value=0)
+
+# Predict
+pred_label = le.inverse_transform(clf.predict(test_X))[0]
+pred_proba = clf.predict_proba(test_X)[0]
+
+print("Predicted class:", pred_label)
+print("Predicted probabilities:", dict(zip(le.classes_, pred_proba)))
