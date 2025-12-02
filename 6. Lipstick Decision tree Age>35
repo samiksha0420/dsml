@@ -1,0 +1,52 @@
+# Write a program to do: A dataset collected in a cosmetics shop showing
+# details of customers and whether or not they responded to a special offer
+# to buy a new lip-stick is shown in table below. (Use library commands)
+# According to the decision tree you have made from the previous training
+# data set, what is the decision for the test data: [Age > 35, Income =
+# Medium, Gender = Female, Marital Status = Married]?
+
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.preprocessing import LabelEncoder
+
+# Load dataset
+df = pd.read_csv("/Users/srushtighogare/Downloads/Datasets/Lipstick.csv")
+df.columns = [c.strip() for c in df.columns]
+
+# Drop Id-like column
+for c in df.columns:
+    if "id" in c.lower():
+        df = df.drop(columns=[c])
+        break
+
+# Target and features
+target = "Buys"
+features = [c for c in df.columns if c != target]
+
+# Encode target
+le = LabelEncoder()
+y = le.fit_transform(df[target])
+
+# One-hot encode categorical features
+X = pd.get_dummies(df[features], drop_first=False)
+
+# Train Decision Tree
+clf = DecisionTreeClassifier(random_state=42)
+clf.fit(X, y)
+
+# Test input
+test_sample = {
+    "Age": ">35",
+    "Income": "Medium",
+    "Gender": "Female",
+    "Ms": "Married"
+}
+
+test_df = pd.DataFrame([test_sample])
+test_X = pd.get_dummies(test_df).reindex(columns=X.columns, fill_value=0)
+
+# Prediction
+pred = clf.predict(test_X)[0]
+result = le.inverse_transform([pred])[0]
+
+print("Decision for test customer:", result)
