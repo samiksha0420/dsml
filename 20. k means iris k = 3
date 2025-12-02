@@ -1,0 +1,63 @@
+# Write a program to cluster a set of points using K-means for IRIS
+# dataset. Consider, K=3, clusters. Consider Euclidean distance as the
+# distance measure. Randomly initialize a cluster mean as one of the data
+# points. Iterate at least for 10 iterations. After iterations are over, print the
+# final cluster means for each of the clusters.
+
+import numpy as np
+from sklearn.datasets import load_iris
+
+# -----------------------------
+# 1. Load IRIS dataset
+# -----------------------------
+iris = load_iris()
+X = iris.data   # shape (150, 4) -> 4 features: sepal length, sepal width, petal length, petal width
+
+# -----------------------------
+# 2. Set K and initialize means
+# -----------------------------
+K = 3
+np.random.seed(42)  # for reproducibility
+
+# randomly choose K distinct data points as initial cluster means
+initial_indices = np.random.choice(X.shape[0], K, replace=False)
+means = X[initial_indices, :]   # shape (3, 4)
+
+print("Initial cluster means (chosen from data points):")
+print(means)
+
+# -----------------------------
+# 3. Run K-means iterations
+# -----------------------------
+num_iterations = 10
+
+for it in range(num_iterations):
+    # Step 1: Assign each point to closest mean (cluster)
+    # Compute Euclidean distance from each point to each mean
+    # distances[i, j] = distance from point i to mean j
+    distances = np.linalg.norm(X[:, np.newaxis, :] - means[np.newaxis, :, :], axis=2)
+
+    # cluster assignment: index of nearest mean for each point
+    labels = np.argmin(distances, axis=1)
+
+    # Step 2: Recompute means as average of points in each cluster
+    new_means = np.zeros_like(means)
+    for k in range(K):
+        cluster_points = X[labels == k]
+        if len(cluster_points) > 0:
+            new_means[k] = cluster_points.mean(axis=0)
+        else:
+            # if a cluster got no points, reinitialize its mean randomly
+            new_means[k] = X[np.random.choice(X.shape[0])]
+
+    means = new_means
+
+    print(f"\nAfter iteration {it+1}, cluster means:")
+    print(means)
+
+# -----------------------------
+# 4. Final cluster means
+# -----------------------------
+print("\nFinal cluster means after", num_iterations, "iterations:")
+for k in range(K):
+    print(f"Cluster {k+1} mean:", means[k])
