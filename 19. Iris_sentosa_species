@@ -1,0 +1,35 @@
+# Write a Python program to display some basic statistical details like
+# percentile, mean, standard deviation etc (Use python and pandas
+# commands) the species of ‘Iris-setosa’, ‘Iris-versicolor’ and ‘Iris-versicolor’
+# of iris.csv dataset.
+
+import pandas as pd
+
+# -----------------------------------------
+# Load the iris dataset
+# -----------------------------------------
+df = pd.read_csv("/Users/srushtighogare/Downloads/Datasets/IRIS.csv")     # change the filename if needed
+
+print("\n--- FIRST 5 ROWS OF DATASET ---")
+print(df.head())
+
+# -----------------------------------------
+# List of species
+# -----------------------------------------
+species_list = df['species'].unique()
+
+print("\nSpecies in dataset:", species_list)
+
+# -----------------------------------------
+# Compute statistical details for each species
+# -----------------------------------------
+
+for species in species_list:
+    print(f"\n--------------------------------------------")
+    print(f" Statistical Summary for: {species}")
+    print(f"--------------------------------------------")
+
+    subset = df[df['species'] == species]
+
+    # Describe gives count, mean, std, min, max, and percentiles
+    print(subset.describe())
