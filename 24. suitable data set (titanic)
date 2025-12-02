@@ -1,0 +1,73 @@
+# 24. Perform the following operations using Python on a suitable data set,
+# counting unique values of data, format of each column, converting variable
+# data type (e.g. from long to short, vice versa), identifying missing values
+# and filling in the missing values.
+
+import pandas as pd
+import numpy as np
+
+# ----------------------------------------------------
+# 1. Load dataset (change filename as needed)
+# ----------------------------------------------------
+df = pd.read_csv("/Users/srushtighogare/Downloads/Datasets/Titanic.csv")   # replace with correct filename
+
+print("\n--- First 5 Rows of Dataset ---")
+print(df.head())
+
+# ----------------------------------------------------
+# 2. Counting unique values in each column
+# ----------------------------------------------------
+print("\n--- Unique Values Count in Each Column ---")
+for col in df.columns:
+    print(f"{col}: {df[col].nunique()} unique values")
+
+# ----------------------------------------------------
+# 3. Check format (data types) of each column
+# ----------------------------------------------------
+print("\n--- Data Types of Columns ---")
+print(df.dtypes)
+
+# ----------------------------------------------------
+# 4. Converting variable data types
+# Examples:
+#    long → short
+#    float → int
+#    string → category
+# ----------------------------------------------------
+
+# Example conversions (you can modify these as needed)
+
+# Convert a numeric column from float to int
+# df["column_name"] = df["column_name"].astype("int16")
+
+# Convert integer column to float
+# df["column_name"] = df["column_name"].astype("float32")
+
+# Convert text column to category (saves memory)
+# df["column_name"] = df["column_name"].astype("category")
+
+print("\n--- Converted Data Types (after conversion) ---")
+print(df.dtypes)
+
+# ----------------------------------------------------
+# 5. Identifying missing values
+# ----------------------------------------------------
+print("\n--- Missing Values Count ---")
+print(df.isnull().sum())
+
+# ----------------------------------------------------
+# 6. Filling missing values
+# ----------------------------------------------------
+
+# Option 1: Fill numeric columns with mean
+df_numeric_filled = df.fillna(df.mean(numeric_only=True))
+
+# Option 2: Fill categorical columns with mode
+for col in df.select_dtypes(include="object").columns:
+    df_numeric_filled[col].fillna(df[col].mode()[0], inplace=True)
+
+print("\n--- Missing Values After Filling ---")
+print(df_numeric_filled.isnull().sum())
+
+print("\n--- Cleaned Dataset Preview ---")
+print(df_numeric_filled.head())
