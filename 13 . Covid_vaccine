@@ -1,0 +1,60 @@
+# Use the covid_vaccine_statewise.csv dataset and perform the following
+# analytics.
+# a. Describe the dataset
+# b. Number of persons state wise vaccinated for first dose in India
+# c. Number of persons state wise vaccinated for second dose in India
+
+import pandas as pd
+
+# ---------------------------------------------
+# Load dataset
+# ---------------------------------------------
+df = pd.read_csv("/Users/srushtighogare/Downloads/Datasets/Covid Vaccine Statewise.csv")
+print("\n--- Dataset Loaded Successfully ---")
+print(df.head())
+
+# ---------------------------------------------
+# a. Describe the dataset
+# ---------------------------------------------
+print("\n--- Dataset Info ---")
+print(df.info())
+
+print("\n--- Statistical Summary of Numeric Columns ---")
+print(df.describe())
+
+print("\n--- Columns Available ---")
+print(df.columns)
+
+# ---------------------------------------------
+# b. Number of persons state-wise vaccinated for FIRST DOSE
+# ---------------------------------------------
+# Column usually named: "First Dose Administered" or similar
+
+first_dose_cols = [c for c in df.columns if "First" in c or "Dose 1" in c or "1st" in c]
+
+if first_dose_cols:
+    first_dose_col = first_dose_cols[0]
+    print(f"\nUsing column for First Dose: {first_dose_col}")
+
+    first_dose_statewise = df.groupby("State")[first_dose_col].sum()
+
+    print("\n--- State-wise First Dose Vaccinations ---")
+    print(first_dose_statewise)
+else:
+    print("\nNo 'First Dose' column found. Please check column names.")
+
+# ---------------------------------------------
+# c. Number of persons state-wise vaccinated for SECOND DOSE
+# ---------------------------------------------
+second_dose_cols = [c for c in df.columns if "Second" in c or "Dose 2" in c or "2nd" in c]
+
+if second_dose_cols:
+    second_dose_col = second_dose_cols[0]
+    print(f"\nUsing column for Second Dose: {second_dose_col}")
+
+    second_dose_statewise = df.groupby("State")[second_dose_col].sum()
+
+    print("\n--- State-wise Second Dose Vaccinations ---")
+    print(second_dose_statewise)
+else:
+    print("\nNo 'Second Dose' column found. Please check column names.")
