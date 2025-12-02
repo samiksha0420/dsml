@@ -1,0 +1,51 @@
+# kmeans_manual_q9.py
+import math
+
+# Given points
+points = {
+    "P1": (0.10, 0.60),
+    "P2": (0.15, 0.71),
+    "P3": (0.08, 0.90),
+    "P4": (0.16, 0.85),
+    "P5": (0.20, 0.30),
+    "P6": (0.25, 0.50),
+    "P7": (0.24, 0.10),
+    "P8": (0.30, 0.20)
+}
+
+m1 = points["P1"]  # initial centroid 1
+m2 = points["P8"]  # initial centroid 2
+
+def dist2(a,b):
+    return (a[0]-b[0])**2 + (a[1]-b[1])**2
+
+clusters = {"C1": [], "C2": []}
+print("Initial centroids:")
+print("m1 =", m1)
+print("m2 =", m2)
+print()
+
+# Assignment step
+for name, p in points.items():
+    d1 = dist2(p,m1)
+    d2 = dist2(p,m2)
+    cluster = "C1" if d1 <= d2 else "C2"
+    clusters[cluster].append(name)
+    print(f"{name}: point={p}, d^2 to m1={d1:.6f}, d^2 to m2={d2:.6f} -> assigned to {cluster}")
+
+print("\nCluster membership after assignment:")
+for k,v in clusters.items():
+    print(k, ":", v, " (population=", len(v), ")")
+
+# Update step: compute new centroids
+def compute_centroid(point_names):
+    xs = [points[n][0] for n in point_names]
+    ys = [points[n][1] for n in point_names]
+    return (sum(xs)/len(xs), sum(ys)/len(ys))
+
+m1_new = compute_centroid(clusters["C1"])
+m2_new = compute_centroid(clusters["C2"])
+
+print("\nUpdated centroids:")
+print("m1_new =", (round(m1_new[0], 6), round(m1_new[1], 6)))
+print("m2_new =", (round(m2_new[0], 6), round(m2_new[1], 6)))
