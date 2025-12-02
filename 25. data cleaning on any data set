@@ -1,0 +1,183 @@
+# Perform Data Cleaning, Data transformation using Python on any data
+# set
+# data_clean_transform.py
+# General data cleaning & transformation pipeline for any CSV dataset
+
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder
+
+# -----------------------
+# SETTINGS - change these
+# -----------------------
+DATA_PATH = "/Users/srushtighogare/Downloads/Datasets/Ecommerce Customers.csv"        # <- change to your file
+SAVE_CLEANED = True
+CLEANED_PATH = "data_cleaned.csv"
+
+# -----------------------
+# 1. Load & Inspect Data
+# -----------------------
+df = pd.read_csv(DATA_PATH)
+print("Shape:", df.shape)
+print("\nColumns and dtypes:\n", df.dtypes)
+print("\nFirst rows:\n", df.head())
+print("\nSummary (numeric):\n", df.describe().T)
+print("\nMissing values per column:\n", df.isnull().sum())
+
+# -----------------------
+# 2. Drop exact duplicates
+# -----------------------
+dup_count = df.duplicated().sum()
+print(f"\nDuplicate rows: {dup_count}")
+if dup_count > 0:
+    df = df.drop_duplicates().reset_index(drop=True)
+    print("Dropped duplicates. New shape:", df.shape)
+
+# -----------------------
+# 3. Data type conversions / downcast to save memory
+# -----------------------
+# Convert object columns that are actually categoricals to 'category'
+for col in df.select_dtypes(include='object').columns:
+    unique_ratio = df[col].nunique() / len(df)
+    if unique_ratio < 0.5:  # heuristic: treat as categorical
+        df[col] = df[col].astype('category')
+
+# Downcast numeric types where safe
+for col in df.select_dtypes(include=['int64']).columns:
+    df[col] = pd.to_numeric(df[col], downcast='integer')
+for col in df.select_dtypes(include=['float64']).columns:
+    df[col] = pd.to_numeric(df[col], downcast='float')
+
+print("\nDtypes after conversion:\n", df.dtypes)
+
+# -----------------------
+# 4. Parse datetimes (if any)
+# -----------------------
+# Heuristic: columns with 'date' or 'time' in name
+for col in df.columns:
+    if 'date' in col.lower() or 'time' in col.lower():
+        try:
+            df[col] = pd.to_datetime(df[col])
+            # example derived features
+            df[col + "_year"] = df[col].dt.year
+            df[col + "_month"] = df[col].dt.month
+            df[col + "_dayofweek"] = df[col].dt.dayofweek
+            print(f"Parsed datetime and extracted features from: {col}")
+        except Exception:
+            pass
+
+# -----------------------
+# 5. Handling missing values
+# -----------------------
+# Strategy: show options, then apply one (customize as needed)
+print("\nMissing value percentages:")
+print((df.isnull().mean() * 100).round(2))
+
+# Example strategies:
+# - drop columns with too many missing values (>60%)
+high_na_cols = [c for c in df.columns if df[c].isnull().mean() > 0.6]
+if high_na_cols:
+    print("\nDropping columns with >60% missing:", high_na_cols)
+    df.drop(columns=high_na_cols, inplace=True)
+
+# - for numeric columns: fill with median
+num_cols = df.select_dtypes(include=['number']).columns
+for c in num_cols:
+    if df[c].isnull().any():
+        median = df[c].median()
+        df[c] = df[c].fillna(median)
+        print(f"Filled NA in numeric column '{c}' with median = {median}")
+
+# - for categorical columns: fill with mode
+cat_cols = df.select_dtypes(include=['category', 'object']).columns
+for c in cat_cols:
+    if df[c].isnull().any():
+        mode = df[c].mode(dropna=True)
+        if not mode.empty:
+            df[c] = df[c].fillna(mode[0])
+            print(f"Filled NA in categorical column '{c}' with mode = {mode[0]}")
+        else:
+            df[c] = df[c].fillna("Unknown")
+            print(f"Filled NA in categorical column '{c}' with 'Unknown'")
+
+# -----------------------
+# 6. Outlier detection and optional removal (IQR method)
+# -----------------------
+def iqr_outlier_mask(series, k=1.5):
+    q1 = series.quantile(0.25)
+    q3 = series.quantile(0.75)
+    iqr = q3 - q1
+    lower = q1 - k * iqr
+    upper = q3 + k * iqr
+    return (series < lower) | (series > upper)
+
+# Report numeric columns with outliers
+outlier_info = {}
+for c in num_cols:
+    mask = iqr_outlier_mask(df[c])
+    n_out = mask.sum()
+    if n_out > 0:
+        outlier_info[c] = n_out
+print("\nOutliers detected per numeric column (IQR rule):", outlier_info)
+
+# Option to remove rows that are outliers for any numeric column (commented out)
+# combined_mask = np.zeros(len(df), dtype=bool)
+# for c in num_cols:
+#     combined_mask |= iqr_outlier_mask(df[c])
+# df = df[~combined_mask].reset_index(drop=True)
+# print("Shape after removing outliers:", df.shape)
+
+# -----------------------
+# 7. Encoding categorical variables
+# -----------------------
+# Example: label-encode low-cardinality categoricals, one-hot for the rest
+LABEL_ENCODE_THRESHOLD = 10
+label_encoders = {}
+for c in cat_cols:
+    n_unique = df[c].nunique()
+    if n_unique <= LABEL_ENCODE_THRESHOLD:
+        le = LabelEncoder()
+        # convert categories to strings before encoding to avoid dtype issues
+        df[c + "_le"] = le.fit_transform(df[c].astype(str))
+        label_encoders[c] = le
+        print(f"Label-encoded: {c} -> {c + '_le'}")
+    else:
+        # one-hot encode large-cardinality categories (or use frequency encoding)
+        dummies = pd.get_dummies(df[c], prefix=c, drop_first=True)
+        df = pd.concat([df, dummies], axis=1)
+        print(f"One-hot encoded: {c} -> {dummies.shape[1]} columns")
+
+# Optional: drop original categorical columns if encoded
+# df.drop(columns=list(cat_cols), inplace=True)
+
+# -----------------------
+# 8. Feature scaling for numeric columns
+# -----------------------
+# Choose scaler: StandardScaler or MinMaxScaler
+scaler = StandardScaler()
+scaled_cols = [c for c in num_cols]  # modify if you want subset
+if scaled_cols:
+    df_scaled = scaler.fit_transform(df[scaled_cols])
+    df_scaled = pd.DataFrame(df_scaled, columns=[c + "_scaled" for c in scaled_cols], index=df.index)
+    df = pd.concat([df, df_scaled], axis=1)
+    print("\nAdded scaled versions of numeric columns.")
+
+# -----------------------
+# 9. Simple feature engineering example
+# -----------------------
+# If dataset has numeric columns 'x' and 'y', you might add interaction:
+if len(num_cols) >= 2:
+    a, b = num_cols[:2]
+    df[f"{a}_x_{b}"] = df[a] * df[b]
+    print(f"Added interaction feature: {a}_x_{b}")
+
+# -----------------------
+# 10. Final checks & save
+# -----------------------
+print("\nFinal shape:", df.shape)
+print("Final dtypes:\n", df.dtypes.value_counts())
+print("\nAny remaining missing values?\n", df.isnull().sum().sum())
+
+if SAVE_CLEANED:
+    df.to_csv(CLEANED_PATH, index=False)
+    print("Saved cleaned dataset to", CLEANED_PATH)
