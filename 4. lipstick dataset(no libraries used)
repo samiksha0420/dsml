@@ -170,3 +170,108 @@ for t in tests:
     print(t, "=> Predicted Buys:", predict(tree, t))
 
 # End of file
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dataset given 
+# id3_from_csv_no_libs.py
+# Pure-Python (standard library only) script to read a CSV and find the root node via ID3 info gain.
+# Change CSV_PATH if your file is elsewhere.
+
+#  Write a program to do: A dataset collected in a cosmetics shop showing
+# details of customers and whether or not they responded to a special offer
+# to buy a new lip-stick is shown in table below. (Implement step by step
+# using commands - Dont use library) Use this dataset to build a decision
+# tree, with Buys as the target variable, to help in buying lipsticks in the
+# future. Find the root node of the decision tree.
+
+import csv, math
+from collections import Counter, defaultdict
+
+CSV_PATH = "/Users/srushtighogare/Downloads/Datasets/Lipstick.csv"   
+
+def read_csv(path):
+    with open(path, newline='', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        rows = [{k.strip(): (v.strip() if v is not None else v) for k, v in r.items()} for r in reader]
+        cols = [c.strip() for c in reader.fieldnames]
+    return rows, cols
+
+def entropy(labels):
+    n = len(labels)
+    if n == 0: return 0.0
+    counts = Counter(labels)
+    return -sum((cnt/n) * math.log2(cnt/n) for cnt in counts.values())
+
+def partition_by_attribute(dataset, attr):
+    parts = defaultdict(list)
+    for r in dataset:
+        parts[r.get(attr)].append(r)
+    return parts
+
+def information_gain(dataset, attr, target):
+    base = entropy([r[target] for r in dataset])
+    parts = partition_by_attribute(dataset, attr)
+    total = len(dataset)
+    weighted = sum((len(sub)/total) * entropy([r[target] for r in sub]) for sub in parts.values())
+    return base, weighted, base-weighted, parts
+
+# --- main ---
+rows, cols = read_csv(CSV_PATH)
+if not rows:
+    raise SystemExit("No rows found in CSV. Check file path/contents.")
+
+# choose target: prefer 'Buys' else fall back to last column
+target = "Buys" if "Buys" in cols else cols[-1]
+
+attributes = [c for c in cols if c != target]
+
+# detect & drop identifier-like columns:
+# - name contains 'id' (case-insensitive) OR
+# - column has unique values for each row
+n = len(rows)
+id_like = []
+for c in attributes:
+    values = [r[c] for r in rows]
+    if "id" in c.lower():
+        id_like.append(c)
+    elif len(set(values)) == n:
+        id_like.append(c)
+
+filtered_attributes = [c for c in attributes if c not in id_like]
+
+print(f"All columns: {cols}")
+print(f"Dropping identifier-like columns: {id_like}")
+print(f"Target column: {target}")
+print(f"Attributes considered: {filtered_attributes}\n")
+print(f"Total records: {len(rows)}")
+print("Target class counts:", Counter([r[target] for r in rows]))
+print("Base entropy H({}) = {:.4f}\n".format(target, entropy([r[target] for r in rows])))
+
+gains = {}
+for attr in filtered_attributes:
+    base, weighted, gain, parts = information_gain(rows, attr, target)
+    gains[attr] = gain
+    print(f"Attribute: {attr}")
+    print(f"  Weighted entropy = {weighted:.4f}; Information Gain = {gain:.4f}")
+    for val, subset in parts.items():
+        print(f"    - {attr}={val}: count={len(subset)}, class_counts={Counter([r[target] for r in subset])}")
+    print("-"*60)
+
+if gains:
+    best = max(gains, key=gains.get)
+    print(f"\n>> Root node chosen: {best} (Information Gain = {gains[best]:.4f})")
+else:
+    print("No attributes left to choose as root after dropping identifier-like columns.")
