@@ -1,0 +1,71 @@
+# Perform the following operations using Python on the Telecom_Churn
+# dataset. Compute and display summary statistics for each feature available
+# in the dataset using separate commands for each statistic. (e.g. minimum
+# value, maximum value, mean, range, standard deviation, variance and
+# percentiles).
+
+import pandas as pd
+
+# -------------------------------
+# 1. Load Dataset
+# -------------------------------
+df = pd.read_csv("/Users/srushtighogare/JupyterNotebook/Datasets/Telecom Churn.csv")   # change the filename if needed
+
+print("\n--- First 5 rows of Telecom Churn dataset ---")
+print(df.head())
+
+# -------------------------------
+# 2. Summary Statistics (each in separate commands)
+# -------------------------------
+
+numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns
+
+print("\nNumeric Columns:")
+print(list(numeric_cols))
+
+# -------------------------------
+# Minimum value for each feature
+# -------------------------------
+print("\n--- Minimum Values ---")
+print(df[numeric_cols].min())
+
+# -------------------------------
+# Maximum value for each feature
+# -------------------------------
+print("\n--- Maximum Values ---")
+print(df[numeric_cols].max())
+
+# -------------------------------
+# Mean value for each feature
+# -------------------------------
+print("\n--- Mean Values ---")
+print(df[numeric_cols].mean())
+
+# -------------------------------
+# Range = max - min
+# -------------------------------
+print("\n--- Range of Each Numeric Feature ---")
+print(df[numeric_cols].max() - df[numeric_cols].min())
+
+# -------------------------------
+# Standard Deviation
+# -------------------------------
+print("\n--- Standard Deviation ---")
+print(df[numeric_cols].std())
+
+# -------------------------------
+# Variance
+# -------------------------------
+print("\n--- Variance ---")
+print(df[numeric_cols].var())
+
+# -------------------------------
+# Percentiles (25th, 50th, 75th)
+# -------------------------------
+print("\n--- Percentiles (25%, 50%, 75%) ---")
+percentiles = df[numeric_cols].quantile([0.25, 0.50, 0.75])
+print(percentiles)
+
+# You can show more percentiles if needed:
+print("\n--- Detailed Percentiles (0%, 25%, 50%, 75%, 100%) ---")
+print(df[numeric_cols].quantile([0.0, 0.25, 0.50, 0.75, 1.0]))
