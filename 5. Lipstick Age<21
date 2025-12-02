@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.preprocessing import LabelEncoder
 
-CSV_PATH = "/Users/srushtighogare/Downloads/Datasets/Lipstick.csv"   # adjust path if needed
+CSV_PATH = "path"   # adjust path if needed
 
 # Read and clean
 df = pd.read_csv(CSV_PATH)
