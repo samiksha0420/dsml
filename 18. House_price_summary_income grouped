@@ -1,0 +1,43 @@
+# Use House_Price prediction dataset. Provide summary statistics (mean,
+# median, minimum, maximum, standard deviation) of variables (categorical
+# vs quantitative) such as- For example, if categorical variable is age groups
+# and quantitative variable is income, then provide summary statistics of
+# income grouped by the age groups.
+
+import pandas as pd
+
+# -----------------------------------------
+# 1. Load House Price Prediction Dataset
+# -----------------------------------------
+df = pd.read_csv('/Users/srushtighogare/Downloads/Datasets/House Data.csv')   # change filename if needed
+
+print("\n--- FIRST 5 ROWS OF THE DATASET ---")
+print(df.head())
+
+# -----------------------------------------
+# 2. Identify categorical & quantitative variables
+# -----------------------------------------
+categorical_cols = df.select_dtypes(include=['object']).columns
+quantitative_cols = df.select_dtypes(include=['int64', 'float64']).columns
+
+print("\nCategorical Variables:", list(categorical_cols))
+print("Quantitative Variables:", list(quantitative_cols))
+
+# -----------------------------------------
+# 3. COMPUTE SUMMARY STATISTICS GROUPED BY CATEGORICAL VARIABLES
+# -----------------------------------------
+
+print("\n-----------------------------------------")
+print(" SUMMARY STATISTICS GROUPED BY CATEGORICAL VARIABLES")
+print("-----------------------------------------\n")
+
+for cat in categorical_cols:
+    print(f"\n### Grouping by Categorical Variable: {cat}\n")
+    
+    # group quantitative statistics by the categorical variable
+    summary = df.groupby(cat)[quantitative_cols].agg(
+        ['mean', 'median', 'min', 'max', 'std']
+    )
+    
+    print(summary)
+    print("\n" + "-"*80)
