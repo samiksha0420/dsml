@@ -1,0 +1,175 @@
+# titanic_practical.py
+# Python 3.8+ recommended
+# Required libraries: pandas, seaborn, openpyxl (for Excel read/write)
+# Install if needed:
+# pip install pandas seaborn openpyxl
+
+import pandas as pd
+import seaborn as sns
+import os
+
+# ---------------------------
+# 0. Prepare dataset (if local files are not present)
+# ---------------------------
+
+
+tit = sns.load_dataset("titanic")   # seaborn's Titanic (cleaned) DataFrame
+# save to CSV and Excel so we can demonstrate reading from both formats
+tit.to_csv(csv_path, index=False)
+tit.to_excel(xls_path, index=False, engine="openpyxl")
+
+# ---------------------------
+# 1. Read data from different formats
+# ---------------------------
+
+# 1a. Read from CSV
+df_csv = pd.read_csv(csv_path)
+print("\nRead CSV: shape =", df_csv.shape)
+
+# 1b. Read from Excel (first sheet)
+df_xls = pd.read_excel(xls_path, engine="openpyxl")
+print("Read Excel: shape =", df_xls.shape)
+
+# We'll work with one dataframe (they should be identical in this setup)
+df = df_csv.copy()
+
+# Quick peek
+print("\n--- HEAD (first 5 rows) ---")
+print(df.head())
+
+print("\n--- TAIL (last 5 rows) ---")
+print(df.tail())
+
+# ---------------------------
+# 2. Indexing and selecting data
+# ---------------------------
+
+# 2a. Column selection
+print("\nColumns available:", list(df.columns))
+
+# Select a single column (Series)
+age_series = df["age"]
+print("\nSingle column 'age' — head:")
+print(age_series.head())
+
+# Select multiple columns (DataFrame)
+subset = df[["survived", "pclass", "sex", "age", "fare"]]
+print("\nSubset (survived, pclass, sex, age, fare) — head:")
+print(subset.head())
+
+# 2b. Row selection by integer position: iloc
+print("\nRow at index position 10 (iloc[10]):")
+print(df.iloc[10])
+
+# 2c. Row selection by label: loc
+# If index is default RangeIndex, loc works with numeric labels too
+print("\nRows 0 through 4 using loc:")
+print(df.loc[0:4, ["survived", "pclass", "sex", "age"]])
+
+# 2d. Boolean indexing (filtering)
+print("\nPassengers who survived and are female (first 10):")
+survived_female = df[(df["survived"] == 1) & (df["sex"] == "female")]
+print(survived_female[["survived","sex","pclass","age","fare"]].head(10))
+
+# 2e. Using query() for readable boolean filters
+print("\nUsing query(): Males in 1st class older than 30:")
+print(df.query("sex == 'male' and pclass == 1 and age > 30")[["who","sex","pclass","age"]].head())
+
+# 2f. .at and .iat for fast scalar access
+print("\nScalar access example (survived for row 0):", df.at[0, "survived"], df.iat[0, 0])
+
+# ---------------------------
+# 3. Sorting data
+# ---------------------------
+
+# Sort by single column (age ascending, NaNs at end)
+print("\nSort by age (ascending) — head:")
+print(df.sort_values(by="age").head())
+
+# Sort by multiple columns: pclass ascending, fare descending
+print("\nSort by pclass(asc) then fare(desc) — head:")
+print(df.sort_values(by=["pclass", "fare"], ascending=[True, False]).head())
+
+# Keep sorted result in a new DF
+df_sorted = df.sort_values(by="fare", ascending=False).reset_index(drop=True)
+print("\nTop 5 passengers by fare:")
+print(df_sorted[["who","fare","pclass","survived"]].head(5))
+
+# ---------------------------
+# 4. Describe attributes of data
+# ---------------------------
+
+# 4a. Summary statistics for numeric columns
+print("\n--- DESCRIBE (numeric) ---")
+print(df.describe())
+
+# 4b. Describe for all columns (including object/categorical)
+print("\n--- DESCRIBE (include='all') ---")
+print(df.describe(include="all"))
+
+# 4c. Additional statistics: median, mode, unique counts
+print("\nAge median:", df["age"].median())
+print("Most common embark point (mode of 'embarked'):", df["embarked"].mode().tolist())
+
+# 4d. Value counts for categorical columns
+print("\nValue counts for 'pclass':")
+print(df["pclass"].value_counts())
+
+print("\nValue counts for 'sex':")
+print(df["sex"].value_counts())
+
+# ---------------------------
+# 5. Checking data types of each column
+# ---------------------------
+
+print("\n--- DATA TYPES (.dtypes) ---")
+print(df.dtypes)
+
+print("\n--- INFO() summary ---")
+print(df.info())
+
+# 5a. Convert columns (example): convert 'pclass' to category
+df["pclass"] = df["pclass"].astype("category")
+print("\nAfter converting 'pclass' to category — dtypes:")
+print(df.dtypes)
+
+# ---------------------------
+# 6. Missing values check & simple imputation demonstration
+# ---------------------------
+print("\nMissing values per column:")
+print(df.isnull().sum())
+
+# Example: fill missing ages with median (don't overwrite original unless desired)
+df_age_filled = df.copy()
+df_age_filled["age"] = df_age_filled["age"].fillna(df_age_filled["age"].median())
+print("\nAfter median imputation, nulls in 'age':", df_age_filled["age"].isnull().sum())
+
+# ---------------------------
+# 7. Grouping and aggregation examples (useful when describing attributes)
+# ---------------------------
+print("\nSurvival rate by passenger class:")
+survival_by_class = df.groupby("pclass")["survived"].mean()
+print(survival_by_class)
+
+print("\nAverage fare by class and sex (pivot):")
+pivot = df.pivot_table(index="pclass", columns="sex", values="fare", aggfunc="mean")
+print(pivot)
+
+# ---------------------------
+# 8. Save a processed subset (optional)
+# ---------------------------
+processed_path = "titanic_processed.csv"
+df_age_filled.to_csv(processed_path, index=False)
+print(f"\nProcessed dataframe saved to {processed_path}")
+
+# ---------------------------
+# Quick checklist printout for the practical
+# ---------------------------
+print("\n--- Practical checklist completed ---")
+print("1) Read from CSV and Excel")
+print("2) Indexing & selecting (loc, iloc, boolean, query, at/iat)")
+print("3) Sorting (single & multiple columns)")
+print("4) Descriptive statistics (describe, value_counts, median, mode)")
+print("5) Checking dtypes and info()")
+print("6) Missing value check and simple imputation")
+print("7) Groupby/aggregation examples")
