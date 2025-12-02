@@ -1,0 +1,56 @@
+# Use the covid_vaccine_statewise.csv dataset and perform the following
+# analytics.
+# A. Describe the dataset.
+# B. Number of Males vaccinated
+# C.. Number of females vaccinated
+
+import pandas as pd
+
+# -------------------------------------------------------
+# Load dataset
+# -------------------------------------------------------
+df = pd.read_csv( "/Users/srushtighogare/Downloads/Datasets/Covid Vaccine Statewise.csv")
+
+print("\n--- FIRST 5 ROWS OF DATASET ---")
+print(df.head())
+
+# -------------------------------------------------------
+# A. DESCRIBE THE DATASET
+# -------------------------------------------------------
+print("\n--- DATASET INFO ---")
+print(df.info())
+
+print("\n--- STATISTICAL SUMMARY ---")
+print(df.describe(include='all'))
+
+print("\n--- COLUMN NAMES ---")
+print(df.columns.tolist())
+
+# -------------------------------------------------------
+# B. NUMBER OF MALES VACCINATED
+# -------------------------------------------------------
+
+# Find male-related column
+male_cols = [col for col in df.columns if "male" in col.lower()]
+
+if male_cols:
+    male_col = male_cols[0]
+    print(f"\nUsing male column: {male_col}")
+    total_males = df[male_col].sum()
+    print("\nTotal Number of Males Vaccinated in India:", total_males)
+else:
+    print("\nNo male vaccination column found. Please check column names.")
+
+# -------------------------------------------------------
+# C. NUMBER OF FEMALES VACCINATED
+# -------------------------------------------------------
+
+female_cols = [col for col in df.columns if "female" in col.lower()]
+
+if female_cols:
+    female_col = female_cols[0]
+    print(f"\nUsing female column: {female_col}")
+    total_females = df[female_col].sum()
+    print("\nTotal Number of Females Vaccinated in India:", total_females)
+else:
+    print("\nNo female vaccination column found. Please check column names.")
